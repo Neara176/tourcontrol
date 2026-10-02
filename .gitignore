@@ -1,0 +1,12 @@
+# Vercel deployment artifacts
+.vercel
+
+# Node dependencies
+node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
