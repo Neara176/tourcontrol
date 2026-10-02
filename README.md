@@ -1,6 +1,20 @@
 # Phnom Penh Tour Tracker (Neara Tour)
 
-A clean, responsive web application for managing tour bookings, guest details, seasonal pricing, expenses, and profits.
+[![Deploy with Vercel](https://vercel.com/button)](https://tourcontrol.vercel.app/)
+[![Live Production](https://img.shields.io/badge/Production-Live-success?style=flat&logo=vercel)](https://tourcontrol.vercel.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Neara176%2Ftourcontrol-blue?logo=github)](https://github.com/Neara176/tourcontrol)
+
+> **Live Application URL:** [https://tourcontrol.vercel.app/](https://tourcontrol.vercel.app/)
+
+A clean, responsive web application for managing tour bookings, guest details, seasonal pricing, operational expenses, and net profit calculations.
+
+---
+
+## Live Deployment & CI/CD
+
+- **Production URL:** [https://tourcontrol.vercel.app/](https://tourcontrol.vercel.app/)
+- **Hosting Platform:** [Vercel](https://vercel.com)
+- **Continuous Deployment:** Any commit pushed to the `main` branch on GitHub automatically deploys directly to the live site.
 
 ---
 
@@ -32,46 +46,18 @@ python -m http.server 3000
 
 ---
 
-## Pushing to GitHub
+## Pushing Updates
 
-Follow these steps to push this project to your GitHub repository:
-
-1. **Create a new repository on GitHub:**
-   - Go to [github.com/new](https://github.com/new).
-   - Enter a repository name (e.g. `phnom-penh-tour-tracker` or `neara-tour`).
-   - Leave it empty (do **not** check "Initialize with README" or `.gitignore`).
-
-2. **Add the GitHub remote and push:**
-   ```bash
-   # Add your GitHub repository as the remote origin
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-
-   # Push to GitHub
-   git push -u origin main
-   ```
-
----
-
-## Deploying to Vercel
-
-### Option 1: Automatic Deployment with GitHub (Recommended)
-
-1. Go to [vercel.com](https://vercel.com) and log in.
-2. Click **"Add New..."** > **"Project"**.
-3. Import your GitHub repository (`<your-repo-name>`).
-4. Keep the default settings (Framework Preset: **Other**, Root Directory: `./`).
-5. Click **"Deploy"**.
-
-Every time you push new commits to `main`, Vercel will automatically deploy an updated version!
-
-### Option 2: Deploy via Vercel CLI
-
-You can also deploy directly from your terminal using Vercel CLI:
+Whenever you make changes to the app:
 
 ```bash
-# Log in and deploy
-npx vercel
+# 1. Check changed files
+git status
 
-# Deploy to production
-npx vercel --prod
+# 2. Stage and commit changes
+git add .
+git commit -m "Description of changes"
+
+# 3. Push to GitHub (triggers automatic Vercel deployment)
+git push origin main
 ```
