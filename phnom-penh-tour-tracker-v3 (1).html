@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phnom Penh Tour Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1b2437;--bg:#eef1f0;--card:#fff;--line:#d9dfdd;--gold:#e8a317;--muted:#667085;--ok:#1f8a4c;--bad:#c8372d;--warn:#d9780f}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;min-height:100vh}
+nav{width:200px;background:var(--ink);color:#fff;padding:24px 14px;position:sticky;top:0;height:100vh;flex-shrink:0}
+nav h1{font-size:17px;line-height:1.25;margin:0 8px 26px;font-weight:800}
+nav h1 span{display:block;color:var(--gold);font-weight:600;font-size:12px;margin-top:4px}
+nav button{display:block;width:100%;text-align:left;background:none;border:0;color:#c9d1e0;font:inherit;font-size:15px;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:4px}
+nav button:hover{background:#27324b}
+nav button.active{background:var(--gold);color:var(--ink);font-weight:600}
+main{flex:1;padding:28px;max-width:1000px;min-width:0}
+h2{font-size:28px;margin:0 0 6px;font-weight:800}
+h3{margin:26px 0 10px;font-size:18px}
+.sub{color:var(--muted);margin:0 0 18px}
+.page{display:none}.page.show{display:block}
+.seg{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.seg button,.ghost{font:inherit;font-size:14px;padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:999px;cursor:pointer;color:var(--ink)}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ghost{border-radius:8px;padding:7px 12px;font-size:13px}
+.ghost:hover{background:var(--bg)}.ghost.red{color:var(--bad)}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 22px;cursor:pointer;background:var(--gold);color:var(--ink);font-size:15px}
+.btn.sm{padding:8px 14px;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stat small{color:var(--muted);font-size:13px}
+.stat b{display:block;font-size:28px;margin-top:4px}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+.cats{display:flex;gap:10px;flex-wrap:wrap}
+.cat{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:10px;padding:10px 16px;min-width:120px}
+.cat b{font-size:26px;display:block;line-height:1.1}.cat span{font-weight:600;font-size:14px}.cat small{display:block;color:var(--muted)}
+.alert{background:#fff4e0;border:1px solid #f0c77a;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.alert h3{margin:0 0 10px;font-size:16px}
+.wx{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid #f0d9a8}
+.wx .t{flex:1;min-width:180px;font-size:14px}.wx input{width:110px;padding:8px}
+.row{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--c);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer}
+.row .info{flex:1;min-width:170px}
+.tag{display:inline-block;background:var(--c);color:#fff;font-size:12px;padding:2px 10px;border-radius:999px;margin-right:6px}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;background:#e5e9e8;color:var(--ink)}
+.badge.today{background:var(--bad);color:#fff}.badge.tom{background:var(--warn);color:#fff}.badge.soon{background:#f6d27c}
+.badge.need{background:#fff4e0;color:var(--warn);border:1px solid #f0c77a}.badge.done{background:#dff3e6;color:var(--ok)}
+.cx{opacity:.5}
+.empty{color:var(--muted);padding:22px;text-align:center;background:var(--card);border:1px dashed var(--line);border-radius:12px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.bar b{min-width:150px;text-align:center}
+form{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+label small{font-weight:400;color:var(--muted)}
+label.chk{flex-direction:row;align-items:center;gap:10px}label.chk input{width:auto}
+input,select,textarea{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+input[type=color]{padding:2px;height:42px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.full{grid-column:1/-1}
+.pbox{background:var(--bg);border-radius:10px;padding:12px;font-size:15px}.pbox b{font-size:22px;margin-left:8px}
+.err{color:var(--bad);font-size:14px;min-height:18px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}th{background:#f6f8f7}
+.n{text-align:right}.wrap{overflow-x:auto}
+.cal7{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cd{background:var(--card);border:1px solid var(--line);border-radius:8px;min-height:78px;padding:5px;font-size:12px;cursor:pointer;overflow:hidden}
+.cd.dim{opacity:.4}.cd.today{border:2px solid var(--gold)}.cd.sel{background:#fff8e6}
+.cd .dn{font-weight:600;margin-bottom:3px;font-size:13px}
+.wk .cd{min-height:150px}
+.chip{display:block;background:var(--c);color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.cx{text-decoration:line-through}
+.dh{text-align:center;font-weight:600;font-size:12px;color:var(--muted)}
+dialog{border:0;border-radius:14px;padding:22px;max-width:440px;width:92%;font-family:inherit;color:var(--ink)}
+dialog::backdrop{background:rgba(20,28,45,.5)}dialog p{margin:6px 0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+@media(max-width:700px){
+ body{flex-direction:column}
+ nav{width:100%;height:auto;position:fixed;bottom:0;left:0;top:auto;z-index:9;display:flex;padding:6px;gap:2px}
+ nav h1{display:none}nav button{text-align:center;font-size:12px;padding:10px 2px;margin:0}
+ main{padding:16px 12px 90px}
+ .stats{grid-template-columns:1fr}form{grid-template-columns:1fr}
+ .wk{grid-template-columns:1fr}.wk .dh{display:none}.cd{min-height:56px}
+}
+</style>
+</head>
+<body>
+<nav>
+ <h1>Phnom Penh Tour Tracker<span>Bookings &amp; Profit</span></h1>
+ <button data-p="home" class="active">🏠 Home</button>
+ <button data-p="book">🧾 Bookings</button>
+ <button data-p="tours">🛺 Tours</button>
+ <button data-p="rep">📈 Report</button>
+</nav>
+<main>
+
+<section id="home" class="page show">
+ <h2>Home</h2>
+ <div class="bar"><button class="btn" id="hAdd">+ Add Booking</button><a href="#" id="hNote" style="color:var(--warn);font-weight:600"></a></div>
+ <h3 style="margin-top:6px">Upcoming bookings</h3>
+ <div class="seg" id="uF"><button data-u="today">Today</button><button data-u="7" class="on">Next 7 days</button><button data-u="month">This month</button><button data-u="all">All upcoming</button></div>
+ <div class="bar"><label style="flex-direction:row;align-items:center;font-weight:400">Travel date <input type="date" id="uD" style="width:auto;margin-left:8px"></label><span id="uNote" class="sub" style="margin:0"></span></div>
+ <div id="uL"></div>
+ <h3>Calendar</h3>
+ <div class="bar"><button class="ghost" id="cPrev">‹ Prev</button><b id="cT"></b><button class="ghost" id="cNext">Next ›</button><button class="ghost" id="cToday">Today</button>
+  <span class="seg" id="cV" style="margin:0"><button data-v="week">Week</button><button data-v="month" class="on">Month</button></span></div>
+ <div id="cB"></div>
+ <h3>Monthly summary</h3>
+ <div class="bar"><button class="ghost" id="mPrev" aria-label="Previous month">‹</button><input type="month" id="hM" style="width:auto"><button class="ghost" id="mNext" aria-label="Next month">›</button><button class="ghost" id="mNow">This month</button></div>
+ <h3 style="margin-top:0" id="hHead">Tours this month</h3>
+ <div class="cats" id="hCat"></div>
+ <div class="stats">
+  <div class="stat"><small>Expected revenue (expense not entered yet)</small><b id="hExp">$0</b></div>
+  <div class="stat"><small>Revenue (closed tours)</small><b id="hRev">$0</b></div>
+  <div class="stat"><small>Profit (closed tours)</small><b id="hProf" class="pos">$0</b></div>
+ </div>
+ <div id="hWait"></div>
+</section>
+
+<section id="book" class="page">
+ <h2>Bookings</h2>
+ <div id="bList">
+  <div class="bar"><button class="btn" id="bNew">+ Add Booking</button><input id="q" placeholder="Search guest" style="max-width:200px"></div>
+  <div class="seg" id="bF"><button data-f="all" class="on">All</button><button data-f="upcoming">Upcoming</button><button data-f="need">Expense needed</button><button data-f="done">Done</button><button data-f="cancelled">Cancelled</button></div>
+  <div id="bL"></div>
+ </div>
+ <div id="bForm" hidden>
+  <h3 id="fTitle" style="margin-top:0">Add Booking</h3>
+  <form id="f" novalidate>
+   <label>Tour<select id="fTour"></select></label>
+   <label>Travel date and time<input type="datetime-local" id="fDt"></label>
+   <label>Guest name<input id="fName" placeholder="e.g. Sarah Miller"></label>
+   <label>Phone / WhatsApp (optional)<input id="fPhone"></label>
+   <label>Pax<input type="number" id="fPax" min="1" step="1" value="1"></label>
+   <label>Expected revenue ($)<small id="fHint">Amount TripAdvisor will pay you</small><input type="number" id="fRev" min="0" step="0.01"></label>
+   <label class="chk"><input type="checkbox" id="fPaid"> Payment received</label>
+   <label>Expense ($)<small>Leave empty. Fill in after the tour.</small><input type="number" id="fExp" min="0" step="0.01"></label>
+   <div class="pbox full" id="fProf"></div>
+   <label class="full">Notes (optional)<textarea id="fNote" rows="2"></textarea></label>
+   <div class="err full" id="fErr"></div>
+   <div class="full"><button class="btn" type="submit">Save Booking</button> <button class="ghost" type="button" id="fCancel">Back</button></div>
+  </form>
+ </div>
+</section>
+
+<section id="tours" class="page">
+ <h2>Tours</h2>
+ <p class="sub">Set a low season and a high season price per guest. The right one pre-fills each new booking by travel date, and you can still change it for any booking.</p>
+ <div class="card" style="margin-bottom:14px"><b>High season months</b><div id="sMonths" class="seg" style="margin:10px 0 0"></div></div>
+ <form id="tf" novalidate>
+  <label>Tour name<input id="tName"></label>
+  <label>Color<input type="color" id="tCol" value="#1f8a4c"></label>
+  <label>Low season price per guest ($)<input type="number" id="tLow" min="0" step="0.01"></label>
+  <label>High season price per guest ($)<input type="number" id="tHigh" min="0" step="0.01"></label>
+  <div class="err full" id="tErr"></div>
+  <div class="full"><button class="btn" type="submit" id="tSave">Add Tour</button> <button class="ghost" type="button" id="tCancel" hidden>Cancel edit</button></div>
+ </form>
+ <div class="wrap"><table><thead><tr><th>Tour</th><th class="n">Low season</th><th class="n">High season</th><th></th></tr></thead><tbody id="tL"></tbody></table></div>
+</section>
+
+<section id="rep" class="page">
+ <h2>Report</h2>
+ <p class="sub">Closed tours only: tours where the expense has been entered.</p>
+ <div class="seg" id="rF"><button data-g="day" class="on">Daily</button><button data-g="week">Weekly</button><button data-g="month">Monthly</button></div>
+ <div class="stats">
+  <div class="stat"><small>Total Revenue</small><b id="rR">$0</b></div>
+  <div class="stat"><small>Total Expense</small><b id="rC">$0</b></div>
+  <div class="stat"><small>Total Profit</small><b id="rP" class="pos">$0</b></div>
+ </div>
+ <p id="rW" class="sub"></p>
+ <div class="wrap"><table><thead><tr><th>Travel date</th><th class="n">Tours</th><th class="n">Revenue</th><th class="n">Expense</th><th class="n">Profit</th></tr></thead><tbody id="rT"></tbody></table></div>
+ <h3>By tour</h3>
+ <div class="wrap"><table><thead><tr><th>Tour</th><th class="n">Tours</th><th class="n">Guests</th><th class="n">Revenue</th><th class="n">Profit</th></tr></thead><tbody id="rB"></tbody></table></div>
+ <p><button class="ghost" id="rCsv">Download report (CSV)</button></p>
+ <h3>Backup</h3>
+ <button class="ghost" id="bk">Save backup file</button> <button class="ghost" id="rs">Restore from backup</button>
+ <input type="file" id="rsf" accept=".json" hidden>
+</section>
+
+</main>
+<dialog id="dlg"></dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const K1="ppt3_tours",K2="ppt3_bookings";
+const DEF=[{id:"t1",name:"Food Tour",price:30,priceHigh:35,color:"#1f8a4c"},{id:"t2",name:"Kun Khmer",price:25,priceHigh:30,color:"#c8372d"},{id:"t3",name:"City Tour",price:35,priceHigh:40,color:"#2563c9"},{id:"t4",name:"Tuk-tuk Sunset",price:20,priceHigh:25,color:"#d9780f"}];
+function get(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function put(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert("Could not save: browser storage may be blocked.")}}
+const K3="ppt3_season";
+const season=()=>get(K3,[11,12,1,2,3]);
+const tours=()=>get(K1,DEF),books=()=>get(K2,[]);
+const live=()=>books().filter(b=>!b.cancelled);
+const money=n=>(n<0?"-$":"$")+Math.abs(Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:2});
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const p2=n=>String(n).padStart(2,"0");
+const ymd=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const parse=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mon=d=>addD(d,-((d.getDay()+6)%7));
+const today=()=>ymd(new Date());
+const dOf=b=>b.datetime.slice(0,10),tm=b=>b.datetime.slice(11,16);
+const hasExp=b=>b.expense!==null&&b.expense!==undefined&&b.expense!=="";
+const st=b=>b.cancelled?"cancelled":hasExp(b)?"done":dOf(b)<today()?"need":"upcoming";
+const prof=b=>b.revenue-b.expense;
+const tcol=b=>{const t=tours().find(x=>x.id===b.tourId);return t?t.color:(b.color||"#667085")};
+const fmt=b=>new Date(b.datetime).toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const days=b=>Math.round((parse(dOf(b))-parse(today()))/864e5);
+function dl(txt,type,name){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+const q=v=>`"${String(v).replace(/"/g,'""')}"`;
+const sum=(L,f)=>L.reduce((a,b)=>a+f(b),0);
+
+function go(p){
+ document.querySelectorAll(".page").forEach(s=>s.classList.toggle("show",s.id===p));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.p===p));
+ ({home:rHome,book:rBook,tours:rTours,rep:rRep})[p]();
+ window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.p));
+const refresh=()=>go(document.querySelector(".page.show").id);
+
+/* urgency badge */
+function urg(b){
+ const d=days(b);
+ if(d<0)return`<span class="badge">${-d} days ago</span>`;
+ if(d===0)return`<span class="badge today">Today</span>`;
+ if(d===1)return`<span class="badge tom">Tomorrow</span>`;
+ return`<span class="badge ${d<=3?"soon":""}">in ${d} days</span>`;
+}
+function stBadge(b){const s=st(b);return s==="need"?`<span class="badge need">Expense needed</span>`:s==="done"?`<span class="badge done">Done</span>`:s==="cancelled"?`<span class="badge">Cancelled</span>`:urg(b)}
+
+/* HOME */
+let uF="7",cv="month",cc=parse(today()),sel="",hm=today().slice(0,7);
+function setM(m){hm=m;cc=parse(m+"-01");sel="";$("uD").value="";if(!uF){uF="7";$("uF").children[1].classList.add("on")}rHome()}
+function shiftM(n){const d=parse(hm+"-01");setM(ymd(new Date(d.getFullYear(),d.getMonth()+n,1)).slice(0,7))}
+$("mPrev").onclick=()=>shiftM(-1);$("mNext").onclick=()=>shiftM(1);
+$("mNow").onclick=()=>setM(today().slice(0,7));
+$("hM").onchange=()=>{if($("hM").value)setM($("hM").value)};
+function rHome(){
+ const m=hm,L=live(),mo=L.filter(b=>dOf(b).slice(0,7)===m);
+ $("hM").value=m;$("hHead").textContent="Tours in "+parse(m+"-01").toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+ // waiting for expense
+ const need=L.filter(b=>st(b)==="need").sort((a,b)=>a.datetime.localeCompare(b.datetime));
+ $("hNote").textContent=need.length?`⚠️ ${need.length} tour${need.length>1?"s":""} waiting for expense (see below)`:"";
+ $("hWait").innerHTML=need.length?`<div class="alert"><h3>⚠️ ${need.length} finished tour${need.length>1?"s":""} waiting for expense</h3>${need.map(b=>`<div class="wx"><div class="t"><b>${esc(b.tourName)}</b> · ${fmt(b)}<br>${esc(b.guest)} · ${b.pax} pax · expected ${money(b.revenue)}</div><input type="number" min="0" step="0.01" placeholder="Expense $" id="x${b.id}"><button class="btn sm" data-sx="${b.id}">Save expense</button></div>`).join("")}</div>`:"";
+ // categories
+ const c={};mo.forEach(b=>{const x=c[b.tourName]=c[b.tourName]||{n:0,g:0,col:tcol(b)};x.n++;x.g+=b.pax});
+ $("hCat").innerHTML=Object.keys(c).map(k=>`<div class="cat" style="--c:${c[k].col}"><b>${c[k].n}</b><span>${esc(k)}</span><small>${c[k].g} guests</small></div>`).join("")||`<div class="empty" style="width:100%">No tours this month yet.</div>`;
+ const closed=mo.filter(hasExp),open=mo.filter(b=>!hasExp(b));
+ $("hExp").textContent=money(sum(open,b=>b.revenue));
+ $("hRev").textContent=money(sum(closed,b=>b.revenue));
+ const p=sum(closed,prof);$("hProf").textContent=money(p);$("hProf").className=p<0?"neg":"pos";
+ rCal();rUp();
+}
+$("hWait").onclick=e=>{
+ const id=e.target.dataset.sx;if(!id)return;
+ const v=parseFloat($("x"+id).value);
+ if(isNaN(v)||v<0){$("x"+id).focus();return}
+ put(K2,books().map(b=>String(b.id)===id?{...b,expense:v}:b));rHome();
+};
+
+/* calendar (on Home) */
+function rCal(){
+ const L=books().sort((a,b)=>a.datetime.localeCompare(b.datetime)),t=today();
+ let s,n;
+ if(cv==="week"){s=mon(cc);n=7;$("cT").textContent=s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" – "+addD(s,6).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}
+ else{const f=new Date(cc.getFullYear(),cc.getMonth(),1);s=mon(f);n=Math.ceil((((f.getDay()+6)%7)+new Date(cc.getFullYear(),cc.getMonth()+1,0).getDate())/7)*7;$("cT").textContent=cc.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}
+ let cells="";
+ for(let i=0;i<n;i++){
+  const d=addD(s,i),k=ymd(d),dim=cv==="month"&&d.getMonth()!==cc.getMonth();
+  const chips=L.filter(b=>dOf(b)===k).map(b=>{const x=st(b);return`<span class="chip ${b.cancelled?"cx":""}" style="--c:${tcol(b)}" data-open="${b.id}">${x==="need"?"❗":x==="done"?"✓ ":""}${tm(b)} ${esc(b.tourName)}</span>`}).join("");
+  cells+=`<div class="cd ${dim?"dim":""} ${k===t?"today":""} ${k===sel?"sel":""}" data-day="${k}"><div class="dn">${d.getDate()}</div>${chips}</div>`;
+ }
+ $("cB").innerHTML=`<div class="cal7 ${cv==="week"?"wk":""}">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>`<div class="dh">${x}</div>`).join("")}</div><div class="cal7 ${cv==="week"?"wk":""}" style="margin-top:5px">${cells}</div>`;
+}
+$("cV").onclick=e=>{if(!e.target.dataset.v)return;cv=e.target.dataset.v;[...$("cV").children].forEach(b=>b.classList.toggle("on",b===e.target));rCal()};
+function step(n){if(cv==="week"){cc=addD(cc,7*n);rCal()}else shiftM(n)}
+$("cPrev").onclick=()=>step(-1);$("cNext").onclick=()=>step(1);
+$("cToday").onclick=()=>{hm=today().slice(0,7);cc=parse(today());rHome()};
+$("cB").onclick=e=>{
+ const o=e.target.closest("[data-open]");if(o){openDetail(o.dataset.open);return}
+ const d=e.target.closest("[data-day]");
+ if(d){sel=d.dataset.day;$("uD").value=sel;uF="";[...$("uF").children].forEach(b=>b.classList.remove("on"));rCal();rUp();$("uL").scrollIntoView({behavior:"smooth",block:"start"})}
+};
+
+/* upcoming list */
+function rUp(){
+ const t=today(),m=t.slice(0,7),end=ymd(addD(parse(t),6));
+ let L=live().filter(b=>dOf(b)>=t);
+ if(sel)L=L.filter(b=>dOf(b)===sel);
+ else if(uF==="today")L=L.filter(b=>dOf(b)===t);
+ else if(uF==="7")L=L.filter(b=>dOf(b)<=end);
+ else if(uF==="month")L=L.filter(b=>dOf(b).slice(0,7)===m);
+ L.sort((a,b)=>a.datetime.localeCompare(b.datetime));
+ $("uNote").innerHTML=sel?`Showing ${parse(sel).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} · <a href="#" id="uAll">clear date</a>`:"";
+ $("uL").innerHTML=L.length?L.map(b=>`<div class="row" style="--c:${tcol(b)}" data-open="${b.id}"><div class="info"><span class="tag">${esc(b.tourName)}</span>${urg(b)}<div style="margin-top:4px"><b>${fmt(b)}</b></div><div>${esc(b.guest)} · ${b.pax} pax</div></div><div style="text-align:right"><b>${money(b.revenue)}</b><div style="font-size:12px;color:var(--muted)">${b.paid?"paid":"expected"}</div></div></div>`).join(""):`<div class="empty">No upcoming bookings for this filter.</div>`;
+}
+$("uF").onclick=e=>{if(!e.target.dataset.u)return;uF=e.target.dataset.u;sel="";$("uD").value="";[...$("uF").children].forEach(b=>b.classList.toggle("on",b===e.target));rCal();rUp()};
+$("uD").onchange=()=>{sel=$("uD").value;if(sel){[...$("uF").children].forEach(b=>b.classList.remove("on"));cc=parse(sel)}else{uF="7";$("uF").children[1].classList.add("on")}rCal();rUp()};
+$("uNote").onclick=e=>{if(e.target.id==="uAll"){e.preventDefault();sel="";$("uD").value="";uF="7";$("uF").children[1].classList.add("on");rCal();rUp()}};
+$("uL").onclick=e=>{const o=e.target.closest("[data-open]");if(o)openDetail(o.dataset.open)};
+$("hAdd").onclick=()=>{go("book");openForm()};
+$("hNote").onclick=e=>{e.preventDefault();$("hWait").scrollIntoView({behavior:"smooth"})};
+
+/* iPhone calendar */
+function ics(b){
+ const f=d=>`${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}T${p2(d.getHours())}${p2(d.getMinutes())}00`;
+ const s=new Date(b.datetime),e=new Date(s.getTime()+2*36e5),stamp=new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ return["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//PP Tour Tracker//EN","BEGIN:VEVENT",`UID:${b.id}@ppt3`,`DTSTAMP:${stamp}`,`DTSTART:${f(s)}`,`DTEND:${f(e)}`,
+  `SUMMARY:${b.tourName} - ${b.guest} (${b.pax} pax)`,"LOCATION:Phnom Penh",`DESCRIPTION:${(b.notes||"").replace(/\n/g," ")}`,
+  "BEGIN:VALARM","TRIGGER:-PT1H","ACTION:DISPLAY","DESCRIPTION:Tour in 1 hour","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+}
+
+/* BOOKINGS list + details */
+let bF="all";
+function rBook(){
+ $("bList").hidden=false;$("bForm").hidden=true;
+ const s=$("q").value.trim().toLowerCase();
+ const L=books().filter(b=>(bF==="all"||st(b)===bF)&&(!s||b.guest.toLowerCase().includes(s))).sort((a,b)=>b.datetime.localeCompare(a.datetime));
+ $("bL").innerHTML=L.length?L.map(b=>`<div class="row ${b.cancelled?"cx":""}" style="--c:${tcol(b)}" data-open="${b.id}"><div class="info"><span class="tag">${esc(b.tourName)}</span>${stBadge(b)}<div style="margin-top:4px"><b>${fmt(b)}</b></div><div>${esc(b.guest)} · ${b.pax} pax</div></div><div style="text-align:right"><b>${money(b.revenue)}</b><div style="font-size:12px" class="${hasExp(b)?(prof(b)<0?"neg":"pos"):""}">${hasExp(b)?"profit "+money(prof(b)):"no expense yet"}</div></div></div>`).join(""):`<div class="empty">No bookings here.</div>`;
+}
+$("q").oninput=rBook;
+$("bF").onclick=e=>{if(!e.target.dataset.f)return;bF=e.target.dataset.f;[...$("bF").children].forEach(b=>b.classList.toggle("on",b===e.target));rBook()};
+$("bL").onclick=e=>{const o=e.target.closest("[data-open]");if(o)openDetail(o.dataset.open)};
+$("bNew").onclick=()=>openForm();
+
+function openDetail(id){
+ const b=books().find(x=>String(x.id)===String(id));if(!b)return;
+ $("dlg").innerHTML=`<h3 style="margin-top:0">${esc(b.tourName)} ${stBadge(b)}</h3>
+ <p><b>${fmt(b)}</b></p><p>Guest: ${esc(b.guest)}${b.phone?" · "+esc(b.phone):""} · ${b.pax} pax</p>
+ <p>Revenue ${money(b.revenue)} (${b.paid?"paid":"expected"})${hasExp(b)?` · Expense ${money(b.expense)} · <b class="${prof(b)<0?"neg":"pos"}">Profit ${money(prof(b))}</b>`:""}</p>${b.notes?`<p>Notes: ${esc(b.notes)}</p>`:""}
+ <div class="wx" style="border-top:0"><input type="number" min="0" step="0.01" id="dEx" placeholder="Expense $" value="${hasExp(b)?b.expense:""}"><button class="btn sm" id="dSx">${hasExp(b)?"Update expense":"Save expense"}</button></div>
+ <div class="acts"><button class="ghost" id="dE">Edit</button><button class="ghost" id="dI">Add to iPhone</button><button class="ghost" id="dC">${b.cancelled?"Restore":"Cancel booking"}</button><button class="ghost red" id="dD">Delete</button><button class="ghost" id="dX">Close</button></div>`;
+ $("dlg").showModal();
+ const upd=f=>{put(K2,books().map(x=>x.id===b.id?f(x):x));$("dlg").close();refresh()};
+ $("dX").onclick=()=>$("dlg").close();
+ $("dI").onclick=()=>dl(ics(b),"text/calendar","tour.ics");
+ $("dE").onclick=()=>{$("dlg").close();go("book");openForm(b)};
+ $("dC").onclick=()=>upd(x=>({...x,cancelled:!x.cancelled}));
+ $("dSx").onclick=()=>{const v=parseFloat($("dEx").value);if(isNaN(v)||v<0){$("dEx").focus();return}upd(x=>({...x,expense:v}))};
+ $("dD").onclick=()=>{if(confirm("Delete this booking?")){put(K2,books().filter(x=>x.id!==b.id));$("dlg").close();refresh()}};
+}
+
+/* booking form */
+let editId=null;
+function fillRev(){
+ const t=tours().find(x=>x.id===$("fTour").value),n=parseInt($("fPax").value)||0;
+ const mo=$("fDt").value?parseInt($("fDt").value.slice(5,7)):0,hi=season().includes(mo);
+ const p=t?(hi&&t.priceHigh?t.priceHigh:t.price):0;
+ if(p){$("fRev").value=+(p*n).toFixed(2);$("fHint").textContent=`${hi&&t.priceHigh?"High":"Low"} season price applied (${money(p)} × ${n}). Change it if TripAdvisor pays differently.`}
+ else $("fHint").textContent="Amount TripAdvisor will pay you";
+ calc();
+}
+function calc(){
+ const r=parseFloat($("fRev").value)||0,e=$("fExp").value;
+ $("fProf").innerHTML=e===""?"Profit: <b>waiting for expense</b>":`Profit: <b class="${r-e<0?"neg":"pos"}">${money(r-parseFloat(e))}</b>`;
+}
+function openForm(b){
+ const T=tours();
+ if(!T.length){alert("Add a tour on the Tours page first.");go("tours");return}
+ $("bList").hidden=true;$("bForm").hidden=false;$("fErr").textContent="";
+ $("fTour").innerHTML=T.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+ editId=b?b.id:null;$("fTitle").textContent=b?"Edit Booking":"Add Booking";
+ if(b){$("fTour").value=b.tourId;$("fDt").value=b.datetime;$("fName").value=b.guest;$("fPhone").value=b.phone||"";$("fPax").value=b.pax;$("fRev").value=b.revenue;$("fPaid").checked=!!b.paid;$("fExp").value=hasExp(b)?b.expense:"";$("fNote").value=b.notes||"";calc()}
+ else{$("f").reset();const d=new Date();d.setMinutes(0,0,0);d.setHours(d.getHours()+1);$("fDt").value=`${ymd(d)}T${p2(d.getHours())}:00`;fillRev()}
+}
+$("fDt").onchange=()=>{if(!editId)fillRev()};$("fTour").onchange=fillRev;$("fPax").oninput=fillRev;$("fRev").oninput=calc;$("fExp").oninput=calc;
+$("fCancel").onclick=rBook;
+$("f").onsubmit=e=>{
+ e.preventDefault();
+ const name=$("fName").value.trim(),pax=parseInt($("fPax").value),rev=parseFloat($("fRev").value),ex=$("fExp").value;
+ let m="";
+ if(!$("fDt").value)m="Pick a travel date and time.";
+ else if(!name)m="Enter the guest's name.";
+ else if(!(pax>=1))m="Pax must be at least 1.";
+ else if(isNaN(rev)||rev<0)m="Enter the expected revenue ($0 or more).";
+ else if(ex!==""&&parseFloat(ex)<0)m="Expense cannot be negative.";
+ if(m){$("fErr").textContent=m;return}
+ const t=tours().find(x=>x.id===$("fTour").value),L=books(),old=editId?L.find(x=>x.id===editId):null;
+ const rec={id:editId||Date.now(),tourId:t.id,tourName:t.name,color:t.color,datetime:$("fDt").value,guest:name,phone:$("fPhone").value.trim(),pax,revenue:rev,paid:$("fPaid").checked,expense:ex===""?null:parseFloat(ex),notes:$("fNote").value.trim(),cancelled:old?!!old.cancelled:false};
+ if(old)L[L.findIndex(x=>x.id===editId)]=rec;else L.push(rec);
+ put(K2,L);go("home");
+};
+
+/* TOURS */
+let editT=null;
+function rTours(){
+ $("tL").innerHTML=tours().map(t=>`<tr><td><span class="tag" style="--c:${t.color}">${esc(t.name)}</span></td><td class="n">${t.price?money(t.price):"-"}</td><td class="n">${t.priceHigh?money(t.priceHigh):"-"}</td><td class="n"><button class="ghost" data-te="${t.id}">Edit</button> <button class="ghost red" data-td="${t.id}">Delete</button></td></tr>`).join("")||`<tr><td colspan="4">No tours yet.</td></tr>`;
+ const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],S=season();
+ $("sMonths").innerHTML=M.map((n,i)=>`<button data-sm="${i+1}" class="${S.includes(i+1)?"on":""}">${n}</button>`).join("");
+}
+$("sMonths").onclick=e=>{const m=parseInt(e.target.dataset.sm);if(!m)return;const S=season();put(K3,S.includes(m)?S.filter(x=>x!==m):[...S,m]);rTours()};
+$("tL").onclick=e=>{
+ const t=e.target,L=tours();
+ if(t.dataset.te){const x=L.find(y=>y.id===t.dataset.te);editT=x.id;$("tName").value=x.name;$("tCol").value=x.color;$("tLow").value=x.price||"";$("tHigh").value=x.priceHigh||"";$("tSave").textContent="Save Tour";$("tCancel").hidden=false;window.scrollTo(0,0)}
+ if(t.dataset.td&&confirm("Delete this tour? Past bookings keep their data.")){put(K1,L.filter(y=>y.id!==t.dataset.td));rTours()}
+};
+function tReset(){editT=null;$("tf").reset();$("tCol").value="#1f8a4c";$("tSave").textContent="Add Tour";$("tCancel").hidden=true;$("tErr").textContent=""}
+$("tCancel").onclick=tReset;
+$("tf").onsubmit=e=>{
+ e.preventDefault();
+ const name=$("tName").value.trim(),pr=parseFloat($("tLow").value)||0,ph=parseFloat($("tHigh").value)||0;
+ if(!name||pr<0||ph<0){$("tErr").textContent="Enter a tour name. Prices must be 0 or more.";return}
+ const L=tours();
+ if(editT){const i=L.findIndex(x=>x.id===editT);L[i]={...L[i],name,price:pr,priceHigh:ph,color:$("tCol").value}}
+ else L.push({id:"t"+Date.now(),name,price:pr,priceHigh:ph,color:$("tCol").value});
+ put(K1,L);tReset();rTours();
+};
+
+/* REPORT (closed tours only) */
+let rg="day";
+const key=b=>{const d=parse(dOf(b));return rg==="day"?ymd(d):rg==="week"?"Week of "+ymd(mon(d)):dOf(b).slice(0,7)};
+function rRep(){
+ const L=live().filter(hasExp),g={};
+ L.forEach(b=>{const k=key(b),x=g[k]=g[k]||{n:0,r:0,e:0,p:0};x.n++;x.r+=b.revenue;x.e+=b.expense;x.p+=prof(b)});
+ const ks=Object.keys(g).sort().reverse();
+ $("rT").innerHTML=ks.map(k=>`<tr><td>${k}</td><td class="n">${g[k].n}</td><td class="n">${money(g[k].r)}</td><td class="n">${money(g[k].e)}</td><td class="n">${money(g[k].p)}</td></tr>`).join("")||`<tr><td colspan="5">No closed tours yet. Enter an expense on a booking to see it here.</td></tr>`;
+ $("rR").textContent=money(sum(L,b=>b.revenue));$("rC").textContent=money(sum(L,b=>b.expense));
+ const p=sum(L,prof);$("rP").textContent=money(p);$("rP").className=p<0?"neg":"pos";
+ const open=live().filter(b=>!hasExp(b));
+ $("rW").textContent=open.length?`Not included yet: ${open.length} booking${open.length>1?"s":""} without an expense (expected revenue ${money(sum(open,b=>b.revenue))}).`:"";
+ const t={};
+ L.forEach(b=>{const x=t[b.tourName]=t[b.tourName]||{n:0,g:0,r:0,p:0};x.n++;x.g+=b.pax;x.r+=b.revenue;x.p+=prof(b)});
+ $("rB").innerHTML=Object.keys(t).sort((a,b)=>t[b].p-t[a].p).map(k=>`<tr><td>${esc(k)}</td><td class="n">${t[k].n}</td><td class="n">${t[k].g}</td><td class="n">${money(t[k].r)}</td><td class="n">${money(t[k].p)}</td></tr>`).join("")||`<tr><td colspan="5">No data yet.</td></tr>`;
+ $("rCsv").onclick=()=>dl([["Travel date","Tours","Revenue","Expense","Profit"],...ks.map(k=>[k,g[k].n,g[k].r,g[k].e,g[k].p])].map(r=>r.map(q).join(",")).join("\n"),"text/csv","report.csv");
+}
+$("rF").onclick=e=>{if(!e.target.dataset.g)return;rg=e.target.dataset.g;[...$("rF").children].forEach(b=>b.classList.toggle("on",b===e.target));rRep()};
+$("bk").onclick=()=>dl(JSON.stringify({tours:tours(),bookings:books()}),"application/json",`tour-tracker-backup-${today()}.json`);
+$("rs").onclick=()=>$("rsf").click();
+$("rsf").onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.tours)||!Array.isArray(d.bookings))throw 0;if(confirm("Replace all current data with this backup?")){put(K1,d.tours);put(K2,d.bookings);rRep()}}catch(x){alert("This file is not a valid backup.")}};
+ r.readAsText(f);e.target.value="";
+};
+
+if(!localStorage.getItem(K1))put(K1,DEF);
+rHome();
+</script>
+</body>
+</html>

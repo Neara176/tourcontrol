@@ -1,0 +1,15 @@
+{
+  "name": "phnom-penh-tour-tracker",
+  "version": "1.0.0",
+  "description": "Phnom Penh Tour Tracker - Bookings, profit, and tour management",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "tour-tracker",
+    "phnom-penh",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT"
+}
