@@ -1,63 +1,38 @@
 # Phnom Penh Tour Tracker (Neara Tour)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://tourcontrol.vercel.app/)
 [![Live Production](https://img.shields.io/badge/Production-Live-success?style=flat&logo=vercel)](https://tourcontrol.vercel.app/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Neara176%2Ftourcontrol-blue?logo=github)](https://github.com/Neara176/tourcontrol)
 
-> **Live Application URL:** [https://tourcontrol.vercel.app/](https://tourcontrol.vercel.app/)
-
-A clean, responsive web application for managing tour bookings, guest details, seasonal pricing, operational expenses, and net profit calculations.
-
----
-
-## Live Deployment & CI/CD
-
-- **Production URL:** [https://tourcontrol.vercel.app/](https://tourcontrol.vercel.app/)
-- **Hosting Platform:** [Vercel](https://vercel.com)
-- **Continuous Deployment:** Any commit pushed to the `main` branch on GitHub automatically deploys directly to the live site.
-
----
+Tour booking and pricing management app for Phnom Penh tours. The current application is a Next.js App Router project in `tour-control`; the root `index.html` is the preserved legacy version.
 
 ## Features
 
-- 🏠 **Home Dashboard:** Upcoming bookings filter (Today, 7 days, This month, All), dynamic calendar (week & month view), and monthly revenue/profit summaries.
-- 🧾 **Bookings Manager:** Add, view, search, edit, cancel, and track expense/payment status for guest bookings.
-- 🛺 **Tours & Pricing:** Configure tour catalogs with custom colors, low season prices, high season prices, and customizable high-season months.
-- 📈 **Financial Reports & Analytics:** Daily, weekly, and monthly breakdown of tours, guests, revenue, expenses, and net profit.
-- 📥 **Export & Backup:**
-  - Export reports to CSV.
-  - Export bookings directly to Apple Calendar (`.ics`).
-  - Full JSON backup and restore capabilities.
-- 📱 **Mobile & Desktop Friendly:** Fully responsive design built with clean vanilla HTML, CSS, and modern JavaScript.
+- Home dashboard with upcoming bookings, calendar, and monthly summaries.
+- Booking management with guest details, payment state, expenses, and profit.
+- Tour catalog with low/high-season pricing and configurable high-season months.
+- Daily, weekly, and monthly financial reports with CSV export.
+- Responsive desktop and mobile layouts.
+- Current persistence is browser `localStorage`; PostgreSQL is not connected.
 
----
+## Local development
 
-## Local Development & Preview
-
-To run and test the app locally, you can open `index.html` directly in any web browser, or run a local web server:
-
-```bash
-# Using npx serve
-npx serve .
-
-# Or using Python
-python -m http.server 3000
+```powershell
+cd tour-control
+npm ci
+npm run dev
 ```
 
----
+Open <http://localhost:3000>. Validate a production build with `npm run build`; run lint with `npm run lint`.
 
-## Pushing Updates
+## Deploy the Next.js app on Vercel
 
-Whenever you make changes to the app:
+The Next.js project is nested in `tour-control`, so configure the Vercel project to use that folder:
 
-```bash
-# 1. Check changed files
-git status
+1. Import `Neara176/tourcontrol` (or open its existing Vercel project settings).
+2. Set **Root Directory** to `tour-control`.
+3. Use the Next.js framework preset and the default install/build settings (`npm install` / `npm run build`).
+4. Deploy the `main` branch.
 
-# 2. Stage and commit changes
-git add .
-git commit -m "Description of changes"
+If the existing Vercel project is still rooted at the repository root, change its Root Directory before relying on Git pushes to deploy the Next.js application. The root `vercel.json` and `index.html` are for the legacy static app.
 
-# 3. Push to GitHub (triggers automatic Vercel deployment)
-git push origin main
-```
+Do not commit `.env` files or database credentials. Add secrets only in local ignored environment files and Vercel Project Settings after the app has a database integration.
