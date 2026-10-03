@@ -72,7 +72,8 @@ Whenever you or an AI model makes improvements to this project:
 - **Vercel UI Parity Pass**: Rebuilt the global layout and sidebar navigation to match the live production styling more closely, including the dark navy sidebar, gold active state, and spacing between sections.
 - **GitHub/Vercel Deployment Preparation**: Updated the root README with Next.js setup and deployment instructions. Vercel must use `tour-control` as its Root Directory; PostgreSQL is not integrated and no database credentials belong in the repository.
 - **Release Validation**: `npm run lint` and `npm run build` both pass in `tour-control` with no lint warnings.
-- **GitHub History Integration**: The existing remote legacy-app commit is being preserved in the branch history; changes are being pushed without force-overwriting `main`.
+- **GitHub History Integration**: Preserved the existing remote legacy-app commit in branch history and pushed the Next.js app to `main` without force-overwriting remote work.
+- **Vercel Action Required**: Set the Vercel project Root Directory to `tour-control` so the deployment builds the Next.js app instead of the legacy root HTML app.
 
 ---
 
