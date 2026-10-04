@@ -4,22 +4,31 @@ import { Tour, Booking } from '@/types';
 
 interface BookingModalProps {
   onClose: () => void;
-  onSave: (data: Partial<Booking>) => void;
+  onSave: (data: Partial<Booking>) => void | boolean | Promise<void | boolean>;
   editingBooking: Booking | null;
   tours: Tour[];
   season: number[];
 }
 
-function createInitialFormData(editingBooking: Booking | null): Partial<Booking> {
+function createInitialFormData(editingBooking: Booking | null, tours: Tour[], season: number[]): Partial<Booking> {
   if (editingBooking) return editingBooking;
 
   const d = new Date();
   d.setMinutes(0, 0, 0);
   d.setHours(d.getHours() + 1);
+  const localDateTime = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}:00`;
+  const tour = tours[0];
+  const isHighSeason = season.includes(d.getMonth() + 1);
+  const price = tour ? (isHighSeason && tour.priceHigh ? tour.priceHigh : tour.price) : 0;
+
   return {
     id: Date.now(),
-    datetime: `${d.toISOString().split('T')[0]}T${String(d.getHours()).padStart(2, '0')}:00`,
+    datetime: localDateTime,
+    tourId: tour?.id,
+    tourName: tour?.name,
+    color: tour?.color,
     pax: 1,
+    revenue: price,
     paid: false,
     expense: null,
     cancelled: false,
@@ -27,43 +36,82 @@ function createInitialFormData(editingBooking: Booking | null): Partial<Booking>
 }
 
 export default function BookingModal({ onClose, onSave, editingBooking, tours, season }: BookingModalProps) {
-  const [formData, setFormData] = useState<Partial<Booking>>(() => createInitialFormData(editingBooking));
+  const [formData, setFormData] = useState<Partial<Booking>>(() => createInitialFormData(editingBooking, tours, season));
   const [error, setError] = useState('');
 
-  const handleTourChange = (tourId: string) => {
-    const tour = tours.find(t => t.id === tourId);
-    if (!tour) return;
-
-    const dateVal = formData.datetime || '';
-    const month = dateVal ? parseInt(dateVal.slice(5, 7)) : 0;
+  const updatePrice = (tourId: string, datetime: string, pax: number) => {
+    const tour = tours.find(item => item.id === tourId);
+    if (!tour) return {};
+    const month = datetime ? parseInt(datetime.slice(5, 7), 10) : 0;
     const isHigh = season.includes(month);
     const price = isHigh && tour.priceHigh ? tour.priceHigh : tour.price;
-    const pax = formData.pax || 1;
-
-    setFormData(prev => ({
-      ...prev,
+    return {
       tourId,
       tourName: tour.name,
       color: tour.color,
       revenue: Number((price * pax).toFixed(2)),
+    };
+  };
+
+  const handleTourChange = (tourId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      ...updatePrice(tourId, prev.datetime || '', prev.pax || 1),
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handlePaxChange = (value: string) => {
+    const pax = parseInt(value, 10);
+    setFormData(prev => ({
+      ...prev,
+      pax: Number.isNaN(pax) ? undefined : pax,
+      ...(prev.tourId && Number.isFinite(pax)
+        ? updatePrice(prev.tourId, prev.datetime || '', pax)
+        : {}),
+    }));
+  };
+
+  const handleDateChange = (datetime: string) => {
+    setFormData(prev => ({
+      ...prev,
+      datetime,
+      ...(!editingBooking && prev.tourId
+        ? updatePrice(prev.tourId, datetime, prev.pax || 1)
+        : {}),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { guest, datetime, pax, revenue } = formData;
     if (!datetime) return setError('Pick a travel date and time.');
     if (!guest) return setError('Enter the guest\'s name.');
     if (!pax || pax < 1) return setError('Pax must be at least 1.');
     if (revenue === undefined || isNaN(revenue) || revenue < 0) return setError('Enter expected revenue ($0 or more).');
+    if (formData.expense !== null && formData.expense !== undefined && formData.expense < 0) {
+      return setError('Expense cannot be negative.');
+    }
+    if (!formData.tourId || !formData.tourName || !formData.color) {
+      return setError('Choose a tour for this booking.');
+    }
 
-    onSave(formData);
+    const saved = await onSave(formData);
+    if (saved === false) setError('The booking was not saved. Check the Supabase error above and try again.');
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-card w-full max-w-xl rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <h3 className="text-xl font-extrabold mb-4">{editingBooking ? 'Edit Booking' : 'Add Booking'}</h3>
+
+        {tours.length === 0 ? (
+          <div className="no-tours-message">
+            <p>Add a tour before creating a booking.</p>
+            <div className="detail-actions">
+              <button type="button" onClick={onClose} className="secondary-button">Close</button>
+            </div>
+          </div>
+        ) : (
         
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -82,7 +130,7 @@ export default function BookingModal({ onClose, onSave, editingBooking, tours, s
             <input 
               type="datetime-local" 
               value={formData.datetime || ''} 
-              onChange={(e) => setFormData({...formData, datetime: e.target.value})}
+              onChange={(e) => handleDateChange(e.target.value)}
               className="border border-line rounded-lg p-2"
             />
           </label>
@@ -113,8 +161,8 @@ export default function BookingModal({ onClose, onSave, editingBooking, tours, s
             <input 
               type="number" 
               min="1" 
-              value={formData.pax || 1} 
-              onChange={(e) => setFormData({...formData, pax: parseInt(e.target.value)})}
+              value={formData.pax ?? ''}
+              onChange={(e) => handlePaxChange(e.target.value)}
               className="border border-line rounded-lg p-2"
             />
           </label>
@@ -145,7 +193,7 @@ export default function BookingModal({ onClose, onSave, editingBooking, tours, s
             <input 
               type="number" 
               step="0.01"
-              value={formData.expense === null ? '' : formData.expense} 
+              value={formData.expense == null ? '' : formData.expense}
               onChange={(e) => setFormData({...formData, expense: e.target.value === '' ? null : parseFloat(e.target.value)})}
               className="border border-line rounded-lg p-2"
             />
@@ -174,6 +222,7 @@ export default function BookingModal({ onClose, onSave, editingBooking, tours, s
             <button type="submit" className="bg-gold text-ink font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">Save Booking</button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

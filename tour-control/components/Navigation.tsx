@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
 
 const navItems = [
   { name: 'Home', path: '/', icon: '🏠' },
@@ -12,9 +13,10 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   return (
-    <nav className="nav-shell hidden md:flex">
+    <nav className="nav-shell">
       <h1 className="nav-brand">
         Phnom Penh Tour Tracker
         <span className="nav-brand-sub">Bookings &amp; Profit</span>
@@ -32,6 +34,12 @@ export default function Navigation() {
             <span>{item.name}</span>
           </Link>
         ))}
+      </div>
+      <div className="nav-account">
+        <span title={user?.email ?? ''}>{user?.email}</span>
+        <button type="button" className="nav-logout" onClick={() => void signOut().catch(() => undefined)}>
+          Sign out
+        </button>
       </div>
     </nav>
   );

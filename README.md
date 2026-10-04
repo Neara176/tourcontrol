@@ -11,8 +11,10 @@ Tour booking and pricing management app for Phnom Penh tours. The current applic
 - Booking management with guest details, payment state, expenses, and profit.
 - Tour catalog with low/high-season pricing and configurable high-season months.
 - Daily, weekly, and monthly financial reports with CSV export.
+- Booking detail actions for expenses, cancellation/restoration, deletion, and adding an `.ics` event to iPhone or another calendar.
+- JSON backup and restore for moving booking data between browsers or devices.
 - Responsive desktop and mobile layouts.
-- Current persistence is browser `localStorage`; PostgreSQL is not connected.
+- Supabase Auth and row-level-secured cloud storage for tours, bookings, and season settings.
 
 ## Local development
 
@@ -23,6 +25,21 @@ npm run dev
 ```
 
 Open <http://localhost:3000>. Validate a production build with `npm run build`; run lint with `npm run lint`.
+
+### Configure Supabase
+
+Run these commands from the `tour-control` directory:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+1. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` from Supabase Project Settings → API (the legacy anon-key variable is also accepted). These are public client values; never put a service-role key in the app.
+2. Run `supabase/schema.sql` in the Supabase SQL Editor. It creates the tables and owner-only row-level security policies.
+3. In Supabase Dashboard → Authentication settings, disable **Allow new users to sign up**; then create the owner account under Authentication → Users and sign in at `/login`.
+4. For Vercel, set the same two environment variables in Project Settings → Environment Variables.
+
+On the first authenticated visit, existing app-local tours, bookings, and season settings are imported into that owner's cloud account. The legacy `index.html` and Next.js app use separate browser storage origins; use **Report > Save backup file** in one app and **Restore from backup** in the other to move data.
 
 ## Deploy the Next.js app on Vercel
 
@@ -35,4 +52,4 @@ The Next.js project is nested in `tour-control`, so configure the Vercel project
 
 If the existing Vercel project is still rooted at the repository root, change its Root Directory before relying on Git pushes to deploy the Next.js application. The root `vercel.json` and `index.html` are for the legacy static app.
 
-Do not commit `.env` files or database credentials. Add secrets only in local ignored environment files and Vercel Project Settings after the app has a database integration.
+Do not commit `.env` files or database credentials. `.env.local` is ignored by Git. Set the two public client variables in Vercel Project Settings; do not add a Supabase service-role key to Vercel for this browser-only integration.

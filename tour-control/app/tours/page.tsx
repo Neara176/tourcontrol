@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { useStorage } from '@/hooks/useStorage';
 import { Tour } from '@/types';
+import StorageError from '@/components/StorageError';
 
 export default function ToursPage() {
-  const { tours, setTours, season, setSeason, initialized } = useStorage();
+  const { tours, setTours, season, setSeason, initialized, error: storageError } = useStorage();
   const [editTour, setEditTour] = useState<Tour | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -27,7 +28,7 @@ export default function ToursPage() {
     setError('');
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = formData.name.trim();
     const price = parseFloat(formData.price) || 0;
@@ -38,24 +39,26 @@ export default function ToursPage() {
       return;
     }
 
+    let saved: boolean;
     if (editTour) {
-      setTours(tours.map(t => t.id === editTour.id ? { ...t, name, price, priceHigh, color: formData.color } : t));
+      saved = await setTours(tours.map(t => t.id === editTour.id ? { ...t, name, price, priceHigh, color: formData.color } : t));
     } else {
-      setTours([...tours, { id: 't' + Date.now(), name, price, priceHigh, color: formData.color }]);
+      saved = await setTours([...tours, { id: 't' + Date.now(), name, price, priceHigh, color: formData.color }]);
     }
+    if (!saved) return;
 
     setEditTour(null);
     setFormData({ name: '', color: '#1f8a4c', price: '', priceHigh: '' });
     setError('');
   };
 
-  const toggleSeasonMonth = (month: number) => {
-    setSeason(season.includes(month) ? season.filter(m => m !== month) : [...season, month]);
+  const toggleSeasonMonth = async (month: number) => {
+    await setSeason(season.includes(month) ? season.filter(m => m !== month) : [...season, month]);
   };
 
-  const deleteTour = (id: string) => {
+  const deleteTour = async (id: string) => {
     if (confirm('Delete this tour? Past bookings will keep their current data.')) {
-      setTours(tours.filter(t => t.id !== id));
+      await setTours(tours.filter(t => t.id !== id));
     }
   };
 
@@ -63,8 +66,9 @@ export default function ToursPage() {
 
   return (
     <div>
+      <StorageError message={storageError} />
       <h2 className="text-3xl font-extrabold mb-2">Tours</h2>
-      <p className="text-muted mb-6">Set a low season and a high season price per guest. The right one pre-fills each new booking by travel date.</p>
+      <p className="text-muted mb-6">Set a low season and a high season price per guest. The right one pre-fills each new booking by travel date, and you can still change it for any booking.</p>
 
       <div className="bg-card border border-line rounded-xl p-4 mb-4">
         <b className="block mb-2">High season months</b>

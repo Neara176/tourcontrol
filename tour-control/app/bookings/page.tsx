@@ -3,13 +3,18 @@ import React, { useState, useMemo } from 'react';
 import { useStorage } from '@/hooks/useStorage';
 import { Booking, BookingStatus } from '@/types';
 import BookingModal from '@/components/BookingModal';
+import BookingDetailModal from '@/components/BookingDetailModal';
+import StorageError from '@/components/StorageError';
+import { useRouter } from 'next/navigation';
 
 export default function BookingsPage() {
-  const { bookings, setBookings, tours, season, initialized } = useStorage();
+  const { bookings, setBookings, tours, season, initialized, error } = useStorage();
+  const router = useRouter();
   const [filter, setFilter] = useState<BookingStatus>('all');
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const filteredBookings = useMemo(() => {
     return bookings
@@ -24,18 +29,38 @@ export default function BookingsPage() {
   function getStatus(b: Booking) {
     if (b.cancelled) return 'cancelled';
     if (b.expense !== null && b.expense !== undefined && String(b.expense) !== "") return 'done';
-    const today = new Date().toISOString().split('T')[0];
-    return b.datetime.startsWith(today) || b.datetime < today ? 'need' : 'upcoming';
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return b.datetime.slice(0, 10) < today ? 'need' : 'upcoming';
   }
 
-  const handleSaveBooking = (data: Partial<Booking>) => {
+  function getStatusLabel(b: Booking) {
+    const status = getStatus(b);
+    if (status === 'cancelled') return 'Cancelled';
+    if (status === 'done') return 'Done';
+    if (status === 'need') return 'Expense needed';
+    const [year, month, day] = b.datetime.slice(0, 10).split('-').map(Number);
+    const travelDate = new Date(year, month - 1, day);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysUntil = Math.round((travelDate.getTime() - today.getTime()) / 86400000);
+    if (daysUntil === 0) return 'Today';
+    if (daysUntil === 1) return 'Tomorrow';
+    return `in ${daysUntil} days`;
+  }
+
+  const handleSaveBooking = async (data: Partial<Booking>) => {
+    let saved: boolean;
     if (editingBooking) {
-      setBookings(bookings.map(b => b.id === editingBooking.id ? { ...b, ...data } as Booking : b));
+      saved = await setBookings(bookings.map(b => b.id === editingBooking.id ? { ...b, ...data } as Booking : b));
     } else {
-      setBookings([...bookings, { ...data } as Booking]);
+      saved = await setBookings([...bookings, { ...data } as Booking]);
     }
+    if (!saved) return false;
     setIsModalOpen(false);
     setEditingBooking(null);
+    router.push('/');
+    return true;
   };
 
   const openEdit = (b: Booking) => {
@@ -47,6 +72,7 @@ export default function BookingsPage() {
 
   return (
     <div>
+      <StorageError message={error} />
       <h2 className="text-3xl font-extrabold mb-6">Bookings</h2>
       
       <div className="flex flex-col md:flex-row gap-3 mb-4 items-center justify-between">
@@ -88,10 +114,10 @@ export default function BookingsPage() {
       <div className="space-y-2">
         {filteredBookings.length > 0 ? (
           filteredBookings.map(b => (
-            <div 
+            <button
               key={b.id}
-              onClick={() => openEdit(b)}
-              className={`bg-card border border-line border-l-8 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${b.cancelled ? 'opacity-50' : ''}`}
+              onClick={() => setSelectedBooking(b)}
+              className={`booking-row bg-card border border-line border-l-8 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${b.cancelled ? 'opacity-50' : ''}`}
               style={{ borderLeftColor: b.color }}
             >
               <div className="flex-1 min-w-[170px]">
@@ -104,7 +130,7 @@ export default function BookingsPage() {
                     getStatus(b) === 'done' ? 'bg-green-100 text-green-700' : 
                     getStatus(b) === 'need' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-ink'
                   }`}>
-                    {getStatus(b)}
+                    {getStatusLabel(b)}
                   </span>
                 </div>
                 <div className="font-bold text-sm">
@@ -118,7 +144,7 @@ export default function BookingsPage() {
                   {b.expense !== null ? `profit $${(b.revenue - b.expense).toLocaleString()}` : 'no expense yet'}
                 </div>
               </div>
-            </div>
+            </button>
           ))
         ) : (
           <div className="p-6 text-center bg-card border border-dashed border-line rounded-xl text-muted">
@@ -136,6 +162,32 @@ export default function BookingsPage() {
           season={season} 
         />
       )}
+      {selectedBooking && (
+        <BookingDetailModal
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+          onEdit={openEditFromDetails}
+          onUpdate={async updatedBooking => {
+            const saved = await setBookings(bookings.map(booking =>
+              booking.id === updatedBooking.id ? updatedBooking : booking,
+            ));
+            if (saved) setSelectedBooking(null);
+            return saved;
+          }}
+          onDelete={async booking => {
+            if (!window.confirm('Delete this booking?')) return false;
+            const saved = await setBookings(bookings.filter(item => item.id !== booking.id));
+            if (!saved) return false;
+            setSelectedBooking(null);
+            return true;
+          }}
+        />
+      )}
     </div>
   );
+
+  function openEditFromDetails(booking: Booking) {
+    setSelectedBooking(null);
+    openEdit(booking);
+  }
 }

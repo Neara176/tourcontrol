@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import { AuthProvider } from "@/components/AuthProvider";
+import AppFrame from "@/components/AppFrame";
 
 const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -22,10 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`app-shell ${bricolageGrotesque.className}`}>
-        <Navigation />
-        <main className="app-main">
-          {children}
-        </main>
+        <AuthProvider>
+          <AppFrame>{children}</AppFrame>
+        </AuthProvider>
       </body>
     </html>
   );
